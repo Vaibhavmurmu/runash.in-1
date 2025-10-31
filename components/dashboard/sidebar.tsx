@@ -1,92 +1,67 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Video, Settings, Users, MessageSquare, Bell, HelpCircle, Home, LogOut } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { BarChart3, Package, ShoppingCart, Users, Settings, Zap, LogOut } from "lucide-react"
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { name: "Streams", href: "/dashboard/streams", icon: Video },
-  { name: "Audience", href: "/dashboard/audience", icon: Users },
-  { name: "Chat", href: "/dashboard/chat", icon: MessageSquare },
-  { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
-]
-
-export function DashboardSidebar() {
+export function Sidebar() {
   const pathname = usePathname()
-  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const mainLinks = [
+    { label: "Dashboard", href: "/dashboard", icon: BarChart3 },
+    { label: "Products", href: "/dashboard/products", icon: Package },
+    { label: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
+    { label: "Customers", href: "/dashboard/customers", icon: Users },
+  ]
+
+  const bottomLinks = [
+    { label: "Analytics", href: "/dashboard/analytics", icon: Zap },
+    { label: "Settings", href: "/dashboard/settings", icon: Settings },
+  ]
+
+  const NavLink = ({ href, icon: Icon, label }: any) => {
+    const isActive = pathname === href
+    return (
+      <Link
+        href={href}
+        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+          isActive
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+            : "text-sidebar-foreground hover:bg-sidebar-accent/10"
+        }`}
+      >
+        <Icon className="w-5 h-5" />
+        <span className="text-sm font-medium hidden sm:inline">{label}</span>
+      </Link>
+    )
+  }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="flex items-center justify-between p-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="relative h-8 w-8 overflow-hidden rounded-full bg-gradient-to-br from-orange-500 to-amber-300">
-              <div className="absolute inset-0 flex items-center justify-center text-white font-bold">R</div>
-            </div>
-            <span className="text-xl font-bold">RunAsh</span>
-          </Link>
-          <SidebarTrigger />
-        </SidebarHeader>
-
-        <SidebarContent>
-          <SidebarMenu>
-            {navigation.map((item) => {
-              const isActive = pathname === item.href
-
-              return (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild isActive={isActive} tooltip={item.name}>
-                    <Link href={item.href} className="flex items-center">
-                      <item.icon className="mr-3 h-5 w-5" />
-                      <span>{item.name}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
-            })}
-          </SidebarMenu>
-        </SidebarContent>
-
-        <SidebarFooter className="p-4">
-          <div className="flex flex-col gap-2">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Help & Support">
-                  <Link href="/dashboard/support" className="flex items-center">
-                    <HelpCircle className="mr-3 h-5 w-5" />
-                    <span>Help & Support</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-
-            <div className="flex items-center justify-between pt-4 border-t border-border">
-              <ThemeToggle />
-              <Button variant="ghost" size="icon">
-                <LogOut className="h-5 w-5" />
-                <span className="sr-only">Log out</span>
-              </Button>
-            </div>
+    <aside className="w-64 border-r border-sidebar-border bg-sidebar flex flex-col hidden md:flex">
+      <div className="p-6 border-b border-sidebar-border">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
+            <span className="text-sidebar-primary-foreground font-bold text-sm">S</span>
           </div>
-        </SidebarFooter>
-      </Sidebar>
-    </SidebarProvider>
+          <span className="font-bold text-sidebar-foreground hidden sm:inline">SellerHub</span>
+        </div>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-2">
+        {mainLinks.map((link) => (
+          <NavLink key={link.href} {...link} />
+        ))}
+      </nav>
+
+      <div className="p-4 space-y-2 border-t border-sidebar-border">
+        {bottomLinks.map((link) => (
+          <NavLink key={link.href} {...link} />
+        ))}
+        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/10 transition-colors text-sm font-medium">
+          <LogOut className="w-5 h-5" />
+          <span className="hidden sm:inline">Logout</span>
+        </button>
+      </div>
+    </aside>
   )
 }

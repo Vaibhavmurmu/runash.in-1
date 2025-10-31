@@ -1,47 +1,44 @@
-import { NextResponse } from "next/server"
-import { getSql } from "@/lib/db/neon"
+import { getProducts, createProduct } from "@/lib/server-actions"
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url)
-    const search = url.searchParams.get("q")?.toLowerCase() || ""
-    const category = url.searchParams.get("category") || "all"
-    const userId = Number(req.headers.get("x-user-id") || 1)
+    const { searchParams } = new URL(req.url)
+    const sellerId = searchParams.get("sellerId")
 
-    const sql = getSql()
-    const rows = await sql`
-      SELECT id, name, description, price, stock, category, status, rating, sales, image
-      FROM public.products
-      WHERE user_id = ${userId}
-        AND (${search === ""} OR LOWER(name) LIKE ${"%" + search + "%"})
-        AND (${category === "all"} OR category = ${category})
-      ORDER BY updated_at DESC
-      LIMIT 200
-    `
-    return NextResponse.json(rows)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    if (!sellerId) {
+      return Response.json({ error: "Missing sellerId" }, { status: 400 })
+    }
+
+    const { data, error } = await getProducts(sellerId)
+
+    if (error) {
+      return Response.json({ error: "Failed to fetch products" }, { status: 500 })
+    }
+
+    return Response.json({ data })
+  } catch (error) {
+    console.error("[Products API Error]", error)
+    return Response.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const userId = Number(req.headers.get("x-user-id") || 1)
-    const { name, description, price, stock, category, status = "active", image } = body
+    const { sellerId, ...productData } = await req.json()
 
-    if (!name || price == null) {
-      return NextResponse.json({ error: "name and price required" }, { status: 400 })
+    if (!sellerId) {
+      return Response.json({ error: "Missing sellerId" }, { status: 400 })
     }
 
-    const sql = getSql()
-    const [row] = await sql /* sql */`
-      INSERT INTO public.products (user_id, name, description, price, stock, category, status, image)
-      VALUES (${userId}, ${name}, ${description || null}, ${price}, ${stock ?? 0}, ${category || null}, ${status}, ${image || null})
-      RETURNING id, name, description, price, stock, category, status, rating, sales, image
-    `
-    return NextResponse.json(row, { status: 201 })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    const { data, error } = await createProduct(sellerId, productData)
+
+    if (error) {
+      return Response.json({ error: "Failed to create product" }, { status: 500 })
+    }
+
+    return Response.json({ data: data?.[0] }, { status: 201 })
+  } catch (error) {
+    console.error("[Create Product Error]", error)
+    return Response.json({ error: "Internal server error" }, { status: 500 })
   }
 }
